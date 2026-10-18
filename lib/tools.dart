@@ -60,7 +60,7 @@ Widget circleBtn(String icon, VoidCallback f,
   );
 }
 
-// ───────────────────────── کنترلرهای سراسری (با رفتن به صفحه دیگه هم ادامه می‌دن) ─────────────────────────
+// ───────────────────────── کنترلرهای سراسری (با رفتن به صفحه دیگه هم ادامه می‌دن) ──────[...]
 class PomoCtl extends ChangeNotifier {
   List<int> mins = [25, 5, 15];
   bool auto = true;
@@ -447,7 +447,7 @@ class TimerPage extends StatelessWidget {
       listenable: cdt,
       builder: (c, _) {
         final total = cdt.totalMs;
-        presets = [
+        final presets = [
           (1, 'یک دقیقه'), (5, 'پنج دقیقه'), (10, 'ده دقیقه'),
           (15, 'پانزده'), (30, 'سی دقیقه'), (60, 'یک ساعت')
         ];
@@ -783,7 +783,7 @@ class MonthGrid extends StatelessWidget {
     final offset = (first.weekday + 1) % 7;
     final today = dk(DateTime.now());
     final rows = ((offset + len) / 7).ceil();
-    heads = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+    final heads = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
     Widget dayCell(int col, int day) {
       if (day < 1 || day > len) return SizedBox(height: cell);
       final g = DateTime(first.year, first.month, first.day + day - 1);
@@ -998,99 +998,3 @@ class ToolsPage extends StatelessWidget {
       onTap: () => openPage(c, page),
       child: SizedBox(
         width: double.infinity,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          iconBadge(icon, col),
-          Spacer(),
-          Text(t, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16.5)),
-          Text(s,
-              style: TextStyle(
-                  color: kSub, fontWeight: FontWeight.w600, fontSize: 12)),
-        ]),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final top = MediaQuery.of(context).padding.top;
-    return Stack(children: [
-      ListView(
-        padding: EdgeInsets.fromLTRB(16, top + 96, 16, 130),
-        children: [
-          Glass(
-            radius: 30,
-            padding: EdgeInsets.all(20),
-            onTap: () => tabIdx.value = 1,
-            child: Row(children: [
-              iconBadge('tasks', kAccent, size: 64),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('مدیریت کارها',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w900)),
-                      Text('کارهات، اولویت‌ها و آلارم‌ها',
-                          style: TextStyle(
-                              color: kSub,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13)),
-                    ]),
-              ),
-            ]),
-          ),
-          SizedBox(height: 14),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 14,
-            childAspectRatio: 1.22,
-            children: [
-              tile(context, 'pomodoro', Color(0xFFFF5A5F), 'پومودورو',
-                  'تمرکز زمان‌بندی‌شده', PomodoroPage()),
-              tile(context, 'habit', Color(0xFF1FA67A), 'عادت‌ساز',
-                  'عادت‌های روزانه‌تو بساز', HabitsPage()),
-              tile(context, 'event', Color(0xFFAF52DE), 'رویدادها',
-                  'برنامه‌های مهمتو ثبت کن', EventsPage()),
-              tile(context, 'calendar', Color(0xFF1F9AA6), 'تقویم',
-                  'روزهای مهمتو ببین', CalendarPage()),
-              tile(context, 'note', Color(0xFFFFB300), 'یادداشت‌ها',
-                  'هرچی می‌خوای بنویس', NotesPage()),
-              tile(context, 'finance', Color(0xFF2E8B57), 'مالی',
-                  'خرج‌ودخلتو مدیریت کن', FinancePage()),
-              tile(context, 'timer', Color(0xFF3B8EEA), 'تایمر',
-                  'شمارش معکوس', TimerPage()),
-              tile(context, 'stopwatch', Color(0xFFFF9500), 'کرنومتر',
-                  'زمان‌سنج با دور', StopwatchPage()),
-              tile(context, 'alarm', Color(0xFFE5484D), 'آلارم کارها',
-                  'یادآوری با صدای آلارم', AlarmsPage()),
-              tile(context, 'settings', Color(0xFF6E7585), 'تنظیمات',
-                  'ظاهر، آیکون، پشتیبان', SettingsPage()),
-            ],
-          ),
-        ],
-      ),
-      Positioned(
-        top: top + 8,
-        left: 16,
-        right: 16,
-        child: Glass(
-          radius: 30,
-          padding: EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-          child: Row(children: [
-            Expanded(
-                child: Text('ابزارها',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900))),
-            GestureDetector(
-              onTap: () => openPage(context, SettingsPage()),
-              child: iconBadge('settings', kAccent, size: 44),
-            ),
-          ]),
-        ),
-      ),
-    ]);
-  }
-}
