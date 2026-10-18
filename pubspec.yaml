@@ -1,0 +1,15 @@
+name: clario
+description: Clario - free glass style widgets and planner app.
+publish_to: 'none'
+version: 2.2.0+4
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.3
+
+flutter:
+  uses-material-design: true
