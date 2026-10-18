@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,13 +11,52 @@ import 'native.dart';
 import 'pages.dart';
 import 'tools.dart';
 
+void showFatal(Object e, StackTrace? st) {
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: SelectableText(
+            'Clario startup error\n\n$e\n\n${st ?? ''}',
+            textDirection: TextDirection.ltr,
+            style: TextStyle(color: Color(0xFFB71C1C), fontSize: 12),
+          ),
+        ),
+      ),
+    ),
+  ));
+}
+
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  prefs = await SharedPreferences.getInstance();
-  store.load();
-  applyUiPrefs();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(ClarioApp());
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    ErrorWidget.builder = (d) => Material(
+          color: Color(0xFFFFEBEE),
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: SingleChildScrollView(
+              child: Text(
+                d.exceptionAsString(),
+                textDirection: TextDirection.ltr,
+                style: TextStyle(color: Color(0xFFB71C1C), fontSize: 11),
+              ),
+            ),
+          ),
+        );
+    try {
+      prefs = await SharedPreferences.getInstance();
+      store.load();
+      applyUiPrefs();
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } catch (e, st) {
+      showFatal(e, st);
+      return;
+    }
+    runApp(ClarioApp());
+  }, (e, st) {});
 }
 
 class ClarioApp extends StatefulWidget {
