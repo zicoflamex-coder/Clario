@@ -9,7 +9,8 @@ add = ''.join('    <uses-permission android:name="android.permission.%s"/>\n' % 
 s = s.replace('<application', add + '    <application', 1)
 s = re.sub(r'android:label="[^"]*"', 'android:label="کلاریو"', s, count=1)
 s = s.replace('<activity', '<activity android:showWhenLocked="true" android:turnScreenOn="true"', 1)
-recv = '''        <receiver android:name=".AlarmReceiver" android:exported="false"/>
+recv = '''        <meta-data android:name="io.flutter.embedding.android.EnableImpeller" android:value="false"/>
+        <receiver android:name=".AlarmReceiver" android:exported="false"/>
         <receiver android:name=".BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
