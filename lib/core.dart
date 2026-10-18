@@ -48,7 +48,7 @@ String wDay(DateTime d) => wDays[d.weekday % 7];
 
 List<int> toJalali(DateTime d) {
   final gy = d.year, gm = d.month, gd = d.day;
-  gdm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+  final gdm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
   final gy2 = gm > 2 ? gy + 1 : gy;
   var days = 355666 +
       (365 * gy) +

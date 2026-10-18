@@ -447,7 +447,7 @@ class TimerPage extends StatelessWidget {
       listenable: cdt,
       builder: (c, _) {
         final total = cdt.totalMs;
-        presets = [
+        final presets = [
           (1, 'یک دقیقه'), (5, 'پنج دقیقه'), (10, 'ده دقیقه'),
           (15, 'پانزده'), (30, 'سی دقیقه'), (60, 'یک ساعت')
         ];
@@ -783,7 +783,7 @@ class MonthGrid extends StatelessWidget {
     final offset = (first.weekday + 1) % 7;
     final today = dk(DateTime.now());
     final rows = ((offset + len) / 7).ceil();
-    heads = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+    final heads = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
     Widget dayCell(int col, int day) {
       if (day < 1 || day > len) return SizedBox(height: cell);
       final g = DateTime(first.year, first.month, first.day + day - 1);
