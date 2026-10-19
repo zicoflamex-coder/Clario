@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import java.io.File
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -79,6 +80,25 @@ class MainActivity : FlutterActivity() {
                                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(i)
                             result.success(true)
+                        } catch (e: Exception) {
+                            result.success(false)
+                        }
+                    }
+                    "prefsRead" -> {
+                        val t = try {
+                            File(filesDir, "clario_prefs.json").readText(Charsets.UTF_8)
+                        } catch (e: Exception) {
+                            ""
+                        }
+                        result.success(t)
+                    }
+                    "prefsWrite" -> {
+                        try {
+                            val f = File(filesDir, "clario_prefs.json")
+                            val tmp = File(filesDir, "clario_prefs.tmp")
+                            tmp.writeText(call.argument<String>("text") ?: "", Charsets.UTF_8)
+                            if (f.exists()) f.delete()
+                            result.success(tmp.renameTo(f))
                         } catch (e: Exception) {
                             result.success(false)
                         }
