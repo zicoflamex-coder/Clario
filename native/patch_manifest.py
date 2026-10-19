@@ -7,7 +7,7 @@ perms = ['INTERNET', 'POST_NOTIFICATIONS', 'VIBRATE', 'USE_FULL_SCREEN_INTENT',
          'RECEIVE_BOOT_COMPLETED', 'WAKE_LOCK', 'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS']
 add = ''.join('    <uses-permission android:name="android.permission.%s"/>\n' % x for x in perms)
 s = s.replace('<application', add + '    <application', 1)
-s = re.sub(r'android:label="[^"]*"', 'android:label="کلاریو"', s, count=1)
+s = re.sub(r'android:label="[^"]*"', 'android:label="Clario"', s, count=1)
 s = s.replace('<activity', '<activity android:showWhenLocked="true" android:turnScreenOn="true"', 1)
 recv = '''        <meta-data android:name="io.flutter.embedding.android.EnableImpeller" android:value="false"/>
         <receiver android:name=".AlarmReceiver" android:exported="false"/>
@@ -23,7 +23,7 @@ s = re.sub(r'<intent-filter>\s*<action android:name="android.intent.action.MAIN"
 s = re.sub(r'android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_blue"', s)
 aliases = ''
 for n, en in [('blue', 'true'), ('green', 'false'), ('purple', 'false'), ('dark', 'false')]:
-    aliases += '''        <activity-alias android:name=".Icon%s" android:targetActivity=".MainActivity" android:enabled="%s" android:exported="true" android:icon="@mipmap/ic_%s" android:label="کلاریو">
+    aliases += '''        <activity-alias android:name=".Icon%s" android:targetActivity=".MainActivity" android:enabled="%s" android:exported="true" android:icon="@mipmap/ic_%s" android:label="Clario">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
