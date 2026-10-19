@@ -118,6 +118,7 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     }
                     "getIcon" -> result.success(currentIcon())
+                    "alarmCount" -> result.success(AlarmUtil.count(this))
                     "open" -> {
                         open(call.argument<String>("what") ?: "app")
                         result.success(true)
@@ -142,7 +143,33 @@ class MainActivity : FlutterActivity() {
     private fun details(): Intent =
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
 
+    private fun openAutostart() {
+        val tries = listOf(
+            ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"),
+            ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"),
+            ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity"),
+            ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"),
+            ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"),
+            ComponentName("com.samsung.android.lool", "com.samsung.android.sm.battery.ui.BatteryActivity")
+        )
+        for (c in tries) {
+            try {
+                startActivity(Intent().setComponent(c).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return
+            } catch (e: Exception) {
+            }
+        }
+        try {
+            startActivity(details())
+        } catch (e: Exception) {
+        }
+    }
+
     private fun open(what: String) {
+        if (what == "autostart") {
+            openAutostart()
+            return
+        }
         val pkg = Uri.parse("package:$packageName")
         val i: Intent = when (what) {
             "notif" -> Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
