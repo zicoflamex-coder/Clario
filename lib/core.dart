@@ -6,7 +6,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ui.dart';
 export 'ui.dart';
@@ -117,7 +116,111 @@ String jStr(DateTime d) {
 }
 
 // ───────────────────────── ذخیره‌سازی ─────────────────────────
-late SharedPreferences prefs;
+// ذخیره‌ی تنظیمات و داده‌ها (بدون پلاگین؛ فایل JSON داخل پوشه‌ی خصوصی اپ)
+class Prefs {
+  Prefs._(this._m);
+  final Map<String, dynamic> _m;
+  static const MethodChannel _ch = MethodChannel('clario/native');
+  Timer? _t;
+
+  static Future<Prefs> load() async {
+    var m = <String, dynamic>{};
+    if (Platform.isAndroid) {
+      try {
+        final s = await _ch.invokeMethod<String>('prefsRead');
+        if (s != null && s.isNotEmpty) {
+          m = Map<String, dynamic>.from(jsonDecode(s) as Map);
+        }
+      } catch (_) {}
+    }
+    return Prefs._(m);
+  }
+
+  void _save() {
+    _t?.cancel();
+    _t = Timer(const Duration(milliseconds: 120), _flush);
+  }
+
+  Future<void> _flush() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _ch.invokeMethod('prefsWrite', {'text': jsonEncode(_m)});
+    } catch (_) {}
+  }
+
+  int? getInt(String k) {
+    final v = _m[k];
+    return v is int ? v : null;
+  }
+
+  double? getDouble(String k) {
+    final v = _m[k];
+    return v is num ? v.toDouble() : null;
+  }
+
+  bool? getBool(String k) {
+    final v = _m[k];
+    return v is bool ? v : null;
+  }
+
+  String? getString(String k) {
+    final v = _m[k];
+    return v is String ? v : null;
+  }
+
+  List<String>? getStringList(String k) {
+    final v = _m[k];
+    return v is List ? v.map((e) => e.toString()).toList() : null;
+  }
+
+  Object? get(String k) => _m[k];
+  bool containsKey(String k) => _m.containsKey(k);
+  Set<String> getKeys() => _m.keys.toSet();
+
+  Future<bool> setInt(String k, int v) async {
+    _m[k] = v;
+    _save();
+    return true;
+  }
+
+  Future<bool> setDouble(String k, double v) async {
+    _m[k] = v;
+    _save();
+    return true;
+  }
+
+  Future<bool> setBool(String k, bool v) async {
+    _m[k] = v;
+    _save();
+    return true;
+  }
+
+  Future<bool> setString(String k, String v) async {
+    _m[k] = v;
+    _save();
+    return true;
+  }
+
+  Future<bool> setStringList(String k, List<String> v) async {
+    _m[k] = List<String>.from(v);
+    _save();
+    return true;
+  }
+
+  Future<bool> remove(String k) async {
+    _m.remove(k);
+    _save();
+    return true;
+  }
+
+  Future<bool> clear() async {
+    _m.clear();
+    _save();
+    return true;
+  }
+}
+
+late Prefs prefs;
 
 class Store extends ChangeNotifier {
   List<Map<String, dynamic>> tasks = [], notes = [], events = [], habits = [], txs = [];

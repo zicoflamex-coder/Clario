@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'alarm.dart';
 import 'core.dart';
@@ -47,7 +46,7 @@ Future<void> main() async {
           ),
         );
     try {
-      prefs = await SharedPreferences.getInstance();
+      prefs = await Prefs.load();
       store.load();
       applyUiPrefs();
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -299,6 +298,9 @@ class _SplashGateState extends State<SplashGate> {
                     SizedBox(height: 8),
                     Text('روزت، شفاف‌تر.',
                         style: TextStyle(color: kSub, fontWeight: FontWeight.w800)),
+                    SizedBox(height: 18),
+                    Text('v2.3',
+                        style: TextStyle(color: kSub.withAlpha(150), fontSize: 12)),
                   ]),
                 ),
               ]),
