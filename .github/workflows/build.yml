@@ -46,7 +46,14 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build apk --release --no-shrink
+      - run: flutter build apk --release --no-shrink --build-number=${{ github.run_number }}
+
+      - name: Sign APK with the fixed key
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
+          cp build/app/outputs/flutter-apk/app-release.apk /tmp/unsigned.apk
+          ${BT}apksigner sign --ks native/debug.keystore --ks-pass pass:android --key-pass pass:android --ks-key-alias androiddebugkey --out build/app/outputs/flutter-apk/app-release.apk /tmp/unsigned.apk
+          ${BT}apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk | head -3
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
