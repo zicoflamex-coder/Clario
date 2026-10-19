@@ -223,7 +223,7 @@ class Prefs {
 late Prefs prefs;
 
 class Store extends ChangeNotifier {
-  List<Map<String, dynamic>> tasks = [], notes = [], events = [], habits = [], txs = [];
+  List<Map<String, dynamic>> tasks = [], notes = [], events = [], habits = [], txs = [], goals = [];
   int cityIdx = 0;
 
   List<Map<String, dynamic>> _l(String k) {
@@ -244,6 +244,13 @@ class Store extends ChangeNotifier {
     events = _l('events');
     habits = _l('habits');
     txs = _l('txs');
+    goals = _l('goals');
+    final og = prefs.getInt('goal') ?? 0;
+    if (goals.isEmpty && og > 0) {
+      goals.add({'id': newId(), 'name': 'هدف مالی', 'target': og, 'saved': 0, 'due': ''});
+      prefs.setString('goals', jsonEncode(goals));
+    }
+    if (og > 0) prefs.remove('goal');
     cityIdx = prefs.getInt('city') ?? 0;
   }
 
@@ -253,6 +260,7 @@ class Store extends ChangeNotifier {
     prefs.setString('events', jsonEncode(events));
     prefs.setString('habits', jsonEncode(habits));
     prefs.setString('txs', jsonEncode(txs));
+    prefs.setString('goals', jsonEncode(goals));
     notifyListeners();
   }
 

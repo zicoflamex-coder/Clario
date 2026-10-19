@@ -818,8 +818,10 @@ Widget financeTile(int s) {
     final a = _n(t['amt'], 0);
     bal += t['in'] == true ? a : -a;
   }
-  final goal = prefs.getInt('goal') ?? 0;
-  final p = goal > 0 ? (bal / goal).clamp(0.0, 1.0).toDouble() : 0.0;
+  final g = store.goals.isNotEmpty ? store.goals.first : null;
+  final goal = g == null ? 0 : _n(g['target'], 0);
+  final saved = g == null ? 0 : _n(g['saved'], 0);
+  final p = goal > 0 ? (saved / goal).clamp(0.0, 1.0).toDouble() : 0.0;
   final bl = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1479,7 +1481,7 @@ class _TodayPageState extends State<TodayPage> {
                         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                           ClarioLogo(size: 26),
                           SizedBox(width: 7),
-                          Text('کلاریو',
+                          Text('Clario',
                               style: TextStyle(
                                   fontSize: 24,
                                   height: 1.1,

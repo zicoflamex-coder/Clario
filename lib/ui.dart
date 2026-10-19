@@ -732,7 +732,7 @@ Widget iconBadge(String icon, Color col, {double size = 46}) => Container(
     );
 
 
-// ───────────────────────── شخصیت و لوگوی کلاریو ─────────────────────────
+// ───────────────────────── شخصیت و لوگوی Clario ─────────────────────────
 Path _dropPath(double w, double h) => Path()
   ..moveTo(.5 * w, .05 * h)
   ..cubicTo(.5 * w, .05 * h, .17 * w, .42 * h, .17 * w, .64 * h)

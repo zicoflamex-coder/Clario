@@ -92,6 +92,7 @@ class _ClarioAppState extends State<ClarioApp> with WidgetsBindingObserver {
         final dark = isDark;
         final base = ThemeData(
           useMaterial3: true,
+          fontFamily: 'Clario',
           brightness: dark ? Brightness.dark : Brightness.light,
           scaffoldBackgroundColor: kBg,
           colorScheme: ColorScheme.fromSeed(
@@ -99,7 +100,7 @@ class _ClarioAppState extends State<ClarioApp> with WidgetsBindingObserver {
               brightness: dark ? Brightness.dark : Brightness.light),
         );
         return MaterialApp(
-          title: 'کلاریو',
+          title: 'Clario',
           debugShowCheckedModeBanner: false,
           theme: base.copyWith(
             textTheme: base.textTheme.apply(bodyColor: kInk, displayColor: kInk),
@@ -149,7 +150,7 @@ class _ShellState extends State<Shell> {
             title: Text('دسترسی‌های لازم',
                 style: TextStyle(fontWeight: FontWeight.w900)),
             content: Text(
-                'برای اینکه آلارم کارها و تایمرها حتی وقتی برنامه بسته‌ست به صدا دربیاد، کلاریو به اجازه اعلان‌ها و چند تنظیم دیگه نیاز داره. الان تنظیمشون می‌کنیم؟',
+                'برای اینکه آلارم کارها و تایمرها حتی وقتی برنامه بسته‌ست به صدا دربیاد، Clario به اجازه اعلان‌ها و چند تنظیم دیگه نیاز داره. الان تنظیمشون می‌کنیم؟',
                 style: TextStyle(height: 1.7)),
             actions: [
               TextButton(
@@ -292,14 +293,11 @@ class _SplashGateState extends State<SplashGate> {
                             fontWeight: FontWeight.w900,
                             color: kAccent,
                             letterSpacing: 2)),
-                    Text('کلاریو',
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.w900, color: kInk)),
                     SizedBox(height: 8),
                     Text('روزت، شفاف‌تر.',
                         style: TextStyle(color: kSub, fontWeight: FontWeight.w800)),
                     SizedBox(height: 18),
-                    Text('v2.3',
+                    Text('v2.4',
                         style: TextStyle(color: kSub.withAlpha(150), fontSize: 12)),
                   ]),
                 ),

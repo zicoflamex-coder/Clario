@@ -334,6 +334,7 @@ class _PermissionsPageState extends State<PermissionsPage>
     with WidgetsBindingObserver {
   Map<String, bool> st = {};
   bool loaded = false;
+  int alarmCount = 0;
 
   @override
   void initState() {
@@ -355,8 +356,10 @@ class _PermissionsPageState extends State<PermissionsPage>
 
   Future<void> refresh() async {
     final r = await Native.status();
+    final cnt = await Native.alarmCount();
     if (mounted) {
       setState(() {
+        alarmCount = cnt;
         st = r;
         loaded = true;
       });
@@ -419,7 +422,12 @@ class _PermissionsPageState extends State<PermissionsPage>
             child: Column(children: [
               row('notif', 'bell', 'اعلان‌ها',
                   'لازم برای نمایش و پخش صدای آلارم', Color(0xFFFF9500),
-                  () => Native.requestNotif()),
+                  () async {
+                    await Native.requestNotif();
+                    await Future.delayed(Duration(milliseconds: 1500));
+                    await refresh();
+                    if (st['notif'] != true) Native.open('notif');
+                  }),
               Divider(height: 1),
               row('exact', 'alarm', 'زمان دقیق آلارم',
                   'آلارم سر ساعتِ دقیق به صدا دربیاد', Color(0xFFE5484D),
@@ -432,13 +440,25 @@ class _PermissionsPageState extends State<PermissionsPage>
               row('battery', 'battery', 'بدون محدودیت باتری',
                   'تا گوشی آلارم رو تو حالت خواب نبُره', Color(0xFF1FA67A),
                   () => Native.open('battery')),
+              Divider(height: 1),
+              row('autostart', 'shield', 'شروع خودکار (شیائومی و ...)',
+                  'بدونش بعد از بستن اپ، آلارم به صدا درنمیاد',
+                  Color(0xFF3B8EEA), () => Native.open('autostart')),
             ]),
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+                'آلارم‌های ثبت‌شده در سیستم الان: ${fa(alarmCount)}  (بعد از ساخت آلارم باید ۱ یا بیشتر باشه)',
+                style: TextStyle(
+                    color: kAccent, fontWeight: FontWeight.w800, fontSize: 13)),
           ),
         SizedBox(height: 14),
         Glass(
           onTap: () {
             Native.schedule(900009, DateTime.now().add(Duration(seconds: 10)),
-                'تست آلارم کلاریو');
+                'تست آلارم Clario');
             toast(context, 'آلارم تستی تا ۱۰ ثانیه دیگه به صدا درمیاد ⏰');
           },
           child: Row(children: [
@@ -454,7 +474,7 @@ class _PermissionsPageState extends State<PermissionsPage>
         Padding(
           padding: EdgeInsets.all(8),
           child: Text(
-              'نکته: اگه گوشی‌ات شیائومی/سامسونگ/اوپو هست، علاوه بر موارد بالا باید «شروع خودکار» یا «اجرا در پس‌زمینه» رو هم برای کلاریو از تنظیمات خود گوشی فعال کنی.',
+              'نکته‌ها: ۱) تو شیائومی «شروع خودکار» رو روشن کن و تو برنامه‌های اخیر روی کارت Clario نگه دار و قفلش کن. ۲) صدای «آلارم» گوشی (نه صدای زنگ) نباید صفر باشه. ۳) حالت «مزاحم نشوید» با گزینه‌ی سکوت کامل آلارم رو هم قطع می‌کنه.',
               style: TextStyle(
                   color: kSub,
                   fontWeight: FontWeight.w600,

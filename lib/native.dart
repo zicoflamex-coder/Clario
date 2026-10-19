@@ -110,4 +110,13 @@ class Native {
       return false;
     }
   }
+
+  static Future<int> alarmCount() async {
+    if (!ok) return 0;
+    try {
+      return (await _ch.invokeMethod<int>('alarmCount')) ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
 }

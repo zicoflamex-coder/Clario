@@ -197,7 +197,7 @@ class TasksPage extends StatelessWidget {
                         style:
                             TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
                     SizedBox(height: 6),
-                    Text('کارهات رو بسپار به کلاریو',
+                    Text('کارهات رو بسپار به Clario',
                         style: TextStyle(
                             fontSize: 16,
                             color: kSub,
@@ -301,6 +301,21 @@ class TasksPage extends StatelessWidget {
                                                     overdue ? kDanger : kSub)),
                                       ),
                                   ]),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                if (await confirm(
+                                    c, 'کار «${t['title']}» حذف بشه؟')) {
+                                  cancelTaskAlarm(t);
+                                  store.tasks
+                                      .removeWhere((e) => e['id'] == t['id']);
+                                  store.save();
+                                }
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 6, right: 10),
+                                child: AppIcon('trash', size: 22, color: kDanger),
+                              ),
                             ),
                             Container(
                               width: 10,
@@ -498,7 +513,17 @@ class _TaskFormState extends State<TaskForm> {
                             widget.task == null ? 'تسک جدید' : 'ویرایش تسک',
                             style: TextStyle(
                                 fontSize: 22, fontWeight: FontWeight.w900)))),
-                SizedBox(width: 44),
+                widget.task == null
+                    ? SizedBox(width: 44)
+                    : GIcon(Icons.delete_outline_rounded, () async {
+                        if (await confirm(context, 'این کار حذف بشه؟')) {
+                          cancelTaskAlarm(widget.task!);
+                          store.tasks
+                              .removeWhere((e) => e['id'] == widget.task!['id']);
+                          store.save();
+                          if (context.mounted) Navigator.pop(context);
+                        }
+                      }),
               ]),
             ),
             Expanded(
@@ -870,18 +895,75 @@ String money(int n) {
 class FinancePage extends StatelessWidget {
   FinancePage({super.key});
 
+  int monthKey(DateTime d) {
+    final j = toJalali(d);
+    return j[0] * 100 + j[1];
+  }
+
+  void goalSheet(BuildContext c, [Map<String, dynamic>? g]) {
+    showModalBottomSheet(
+      context: c,
+      isScrollControlled: true,
+      backgroundColor: kSurface,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      builder: (_) => Directionality(
+          textDirection: TextDirection.rtl, child: AddGoalSheet(goal: g)),
+    );
+  }
+
+  Future<void> moveMoney(
+      BuildContext c, Map<String, dynamic> g, bool deposit) async {
+    final v = await askText(
+        c,
+        deposit
+            ? 'مبلغ واریز به «${g['name']}» (تومان)'
+            : 'مبلغ برداشت از «${g['name']}» (تومان)',
+        hint: 'مثلا ۵۰۰٬۰۰۰');
+    if (v == null) return;
+    final n = int.tryParse(en(v.replaceAll(RegExp(r'[,٬\s]'), '')));
+    if (n == null || n <= 0) {
+      if (c.mounted) toast(c, 'مبلغ درست نیست');
+      return;
+    }
+    final s = _i(g['saved'], 0);
+    g['saved'] = deposit ? s + n : (s - n < 0 ? 0 : s - n);
+    store.save();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: store,
       builder: (c, _) {
-        var bal = 0;
+        var bal = 0, mi = 0, mo = 0;
+        final cur = monthKey(DateTime.now());
         for (final t in store.txs) {
           final a = _i(t['amt'], 0);
-          bal += t['in'] == true ? a : -a;
+          final inc = t['in'] == true;
+          bal += inc ? a : -a;
+          final d = DateTime.tryParse((t['date'] as String?) ?? '');
+          if (d != null && monthKey(d) == cur) {
+            if (inc) {
+              mi += a;
+            } else {
+              mo += a;
+            }
+          }
         }
-        final goal = prefs.getInt('goal') ?? 0;
-        final p = goal > 0 ? (bal / goal).clamp(0.0, 1.0).toDouble() : 0.0;
+        final today = dayOnly(DateTime.now());
+
+        Widget sec(String t, Widget? trailing) => Padding(
+              padding: EdgeInsets.fromLTRB(6, 22, 6, 10),
+              child: Row(children: [
+                Expanded(
+                    child: Text(t,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w900, fontSize: 18))),
+                if (trailing != null) trailing,
+              ]),
+            );
+
         return ListView(
           padding: EdgeInsets.fromLTRB(16, 0, 16, 40),
           children: [
@@ -895,8 +977,7 @@ class FinancePage extends StatelessWidget {
                         borderRadius:
                             BorderRadius.vertical(top: Radius.circular(30))),
                     builder: (_) => Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: AddTxSheet()),
+                        textDirection: TextDirection.rtl, child: AddTxSheet()),
                   );
                 })),
             Glass(
@@ -912,56 +993,184 @@ class FinancePage extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.w900,
-                          color: bal < 0 ? Color(0xFFE5484D) : kInk)),
+                          color: bal < 0 ? kDanger : kInk)),
                   Text('تومان',
-                      style:
-                          TextStyle(color: kSub, fontWeight: FontWeight.w700)),
+                      style: TextStyle(
+                          color: kSub, fontWeight: FontWeight.w700)),
                 ]),
               ),
             ),
-            SizedBox(height: 14),
-            Glass(
-              onTap: () async {
-                final v = await askText(c, 'هدف مالی (تومان)',
-                    hint: 'مثلا ۵٬۰۰۰٬۰۰۰');
-                if (v == null) return;
-                final n =
-                    int.tryParse(en(v.replaceAll(RegExp(r'[,٬\s]'), '')));
-                if (n != null) {
-                  prefs.setInt('goal', n);
-                  store.poke();
-                }
-              },
-              child: Row(children: [
-                Ring(p,
-                    size: 74,
-                    stroke: 8,
-                    child: Text('${fa((p * 100).round())}٪',
+            SizedBox(height: 12),
+            Row(children: [
+              Expanded(
+                child: Glass(
+                  radius: 22,
+                  child: Column(children: [
+                    Text('درآمد این ماه',
                         style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 14))),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('هدف مالی',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w900, fontSize: 17)),
-                        SizedBox(height: 4),
-                        Text(
-                            goal > 0
-                                ? 'هدف: ${money(goal)} تومان'
-                                : 'برای انتخاب هدف بزن',
-                            style: TextStyle(
-                                color: kSub, fontWeight: FontWeight.w700)),
-                      ]),
+                            color: kSub,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5)),
+                    SizedBox(height: 4),
+                    Text(money(mi),
+                        style: TextStyle(
+                            color: Color(0xFF1FA67A),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 17)),
+                  ]),
                 ),
-              ]),
-            ),
-            SizedBox(height: 14),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Glass(
+                  radius: 22,
+                  child: Column(children: [
+                    Text('هزینه این ماه',
+                        style: TextStyle(
+                            color: kSub,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5)),
+                    SizedBox(height: 4),
+                    Text(money(mo),
+                        style: TextStyle(
+                            color: kDanger,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 17)),
+                  ]),
+                ),
+              ),
+            ]),
+            sec('اهداف مالی', GBtn('هدف جدید', () => goalSheet(c), primary: true)),
+            if (store.goals.isEmpty)
+              Glass(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(children: [
+                    ClarioMascot(size: 90, mood: 'happy'),
+                    SizedBox(height: 8),
+                    Text(
+                        'هنوز هدفی نساختی. مثلا «خرید گوشی» یا «سفر» رو با مبلغ و مهلت بساز و کم‌کم واریز کن.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: kSub,
+                            fontWeight: FontWeight.w700,
+                            height: 1.8)),
+                  ]),
+                ),
+              ),
+            for (final g in store.goals)
+              Builder(builder: (_) {
+                final target = _i(g['target'], 0);
+                final saved = _i(g['saved'], 0);
+                final p = target > 0
+                    ? (saved / target).clamp(0.0, 1.0).toDouble()
+                    : 0.0;
+                final remain = target - saved < 0 ? 0 : target - saved;
+                final due = DateTime.tryParse((g['due'] as String?) ?? '');
+                var hint = '';
+                if (remain == 0) {
+                  hint = '🎉 به هدفت رسیدی!';
+                } else if (due != null) {
+                  final days = dayOnly(due).difference(today).inDays;
+                  if (days > 0) {
+                    final months = days / 30.0;
+                    final per = (remain / (months < 1 ? 1 : months)).ceil();
+                    hint =
+                        '${fa(days)} روز مونده • ماهی ${money(per)} تومان';
+                  } else {
+                    hint = 'مهلت گذشته';
+                  }
+                }
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Glass(
+                    child: Column(children: [
+                      Row(children: [
+                        Ring(p,
+                            size: 78,
+                            stroke: 9,
+                            child: Text('${fa((p * 100).round())}٪',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14))),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(g['name'] as String,
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 17)),
+                                SizedBox(height: 3),
+                                Text(
+                                    'جمع‌شده: ${money(saved)} از ${money(target)}',
+                                    style: TextStyle(
+                                        color: kSub,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12.5)),
+                                Text('باقی‌مانده: ${money(remain)} تومان',
+                                    style: TextStyle(
+                                        color: kSub,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12.5)),
+                                if (due != null)
+                                  Text('مهلت: ${jStr(due)}',
+                                      style: TextStyle(
+                                          color: kSub,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12.5)),
+                                if (hint.isNotEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 4),
+                                    child: Text(hint,
+                                        style: TextStyle(
+                                            color: kAccent,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 13)),
+                                  ),
+                              ]),
+                        ),
+                      ]),
+                      SizedBox(height: 12),
+                      Row(children: [
+                        Expanded(
+                            child: Center(
+                                child: GBtn('واریز',
+                                    () => moveMoney(c, g, true),
+                                    icon: Icons.add_rounded, primary: true))),
+                        Expanded(
+                            child: Center(
+                                child: GBtn('برداشت',
+                                    () => moveMoney(c, g, false),
+                                    icon: Icons.remove_rounded))),
+                        GestureDetector(
+                          onTap: () => goalSheet(c, g),
+                          child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(Icons.edit_rounded, color: kSub)),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            if (await confirm(
+                                c, 'هدف «${g['name']}» حذف بشه؟')) {
+                              store.goals.removeWhere((e) => e['id'] == g['id']);
+                              store.save();
+                            }
+                          },
+                          child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: AppIcon('trash', size: 22, color: kDanger)),
+                        ),
+                      ]),
+                    ]),
+                  ),
+                );
+              }),
+            sec('تراکنش‌ها', null),
             if (store.txs.isEmpty)
               Padding(
-                padding: EdgeInsets.all(30),
+                padding: EdgeInsets.all(24),
                 child: Center(
                     child: Text('هنوز تراکنشی ثبت نکردی 💸',
                         style: TextStyle(
@@ -975,13 +1184,7 @@ class FinancePage extends StatelessWidget {
                 child: Glass(
                   radius: 22,
                   padding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  onLongPress: () async {
-                    if (await confirm(c, 'این تراکنش حذف بشه؟')) {
-                      store.txs.removeWhere((e) => e['id'] == t['id']);
-                      store.save();
-                    }
-                  },
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(children: [
                     Icon(
                         t['in'] == true
@@ -989,7 +1192,7 @@ class FinancePage extends StatelessWidget {
                             : Icons.arrow_circle_up_rounded,
                         color: t['in'] == true
                             ? Color(0xFF1FA67A)
-                            : Color(0xFFE5484D)),
+                            : kDanger),
                     SizedBox(width: 12),
                     Expanded(
                         child: Text(t['title'] as String,
@@ -1000,17 +1203,131 @@ class FinancePage extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                             color: t['in'] == true
                                 ? Color(0xFF1FA67A)
-                                : Color(0xFFE5484D))),
+                                : kDanger)),
+                    GestureDetector(
+                      onTap: () async {
+                        if (await confirm(c, 'این تراکنش حذف بشه؟')) {
+                          store.txs.removeWhere((e) => e['id'] == t['id']);
+                          store.save();
+                        }
+                      },
+                      child: Padding(
+                          padding: EdgeInsets.only(right: 10),
+                          child: AppIcon('trash', size: 20, color: kDanger)),
+                    ),
                   ]),
                 ),
               ),
-            if (store.txs.isNotEmpty)
-              Center(
-                  child: Text('برای حذف، روی تراکنش نگه دار',
-                      style: TextStyle(color: kSub, fontSize: 11))),
           ],
         );
       },
+    );
+  }
+}
+
+class AddGoalSheet extends StatefulWidget {
+  AddGoalSheet({super.key, this.goal});
+  final Map<String, dynamic>? goal;
+  @override
+  State<AddGoalSheet> createState() => _AddGoalSheetState();
+}
+
+class _AddGoalSheetState extends State<AddGoalSheet> {
+  final name = TextEditingController();
+  final target = TextEditingController();
+  DateTime? due;
+  String? err;
+
+  @override
+  void initState() {
+    super.initState();
+    final g = widget.goal;
+    if (g != null) {
+      name.text = g['name'] as String;
+      target.text = fa(_i(g['target'], 0));
+      due = DateTime.tryParse((g['due'] as String?) ?? '');
+    }
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    target.dispose();
+    super.dispose();
+  }
+
+  void submit() {
+    final n = int.tryParse(en(target.text.replaceAll(RegExp(r'[,٬\s]'), '')));
+    if (name.text.trim().isEmpty || n == null || n <= 0) {
+      setState(() => err = 'نام هدف و مبلغ رو درست وارد کن');
+      return;
+    }
+    final g = widget.goal ??
+        <String, dynamic>{'id': newId(), 'saved': 0};
+    g['name'] = name.text.trim();
+    g['target'] = n;
+    g['due'] = due == null ? '' : dk(due!);
+    if (widget.goal == null) store.goals.add(g);
+    store.save();
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 22, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text(widget.goal == null ? 'هدف مالی جدید' : 'ویرایش هدف',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+        SizedBox(height: 14),
+        TextField(
+          controller: name,
+          decoration: InputDecoration(
+              labelText: 'نام هدف (مثلا خرید گوشی)',
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+        ),
+        SizedBox(height: 12),
+        TextField(
+          controller: target,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+              labelText: 'مبلغ هدف (تومان)',
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+        ),
+        SizedBox(height: 12),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () async {
+            final d = await pickJDate(context, init: due);
+            if (d != null) setState(() => due = d);
+          },
+          child: Row(children: [
+            Icon(Icons.event_rounded, color: kAccent),
+            SizedBox(width: 10),
+            Text('مهلت (اختیاری)',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            Spacer(),
+            Text(due == null ? 'انتخاب نشده' : jStr(due!),
+                style: TextStyle(color: kSub, fontWeight: FontWeight.w700)),
+            if (due != null)
+              GestureDetector(
+                  onTap: () => setState(() => due = null),
+                  child: Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Icon(Icons.close_rounded, color: kSub, size: 20))),
+          ]),
+        ),
+        if (err != null)
+          Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(err!, style: TextStyle(color: kDanger)),
+          ),
+        SizedBox(height: 14),
+        GBtn('ذخیره', submit, primary: true),
+      ]),
     );
   }
 }

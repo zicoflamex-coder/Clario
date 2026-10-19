@@ -312,7 +312,10 @@ class SettingsPage extends StatelessWidget {
                 }),
                 Divider(height: 1),
                 row('sparkle', Color(0xFFFFB300), 'جمله انگیزشی جدید',
-                    'یه جمله تصادفی دیگه', nextQuote),
+                    quotes[quoteIdx % quotes.length], () {
+                  nextQuote();
+                  toast(context, quotes[quoteIdx % quotes.length]);
+                }),
                 Divider(height: 1),
                 row('pin', Color(0xFF1F9AA6), 'شهر آب‌وهوا',
                     cityNames[store.cityIdx], () => pickCity(context)),
@@ -332,7 +335,7 @@ class SettingsPage extends StatelessWidget {
                 row('bell', Color(0xFFFF9500), 'تست آلارم',
                     '۱۰ ثانیه دیگه آلارم به صدا درمیاد', () {
                   Native.schedule(900009,
-                      DateTime.now().add(Duration(seconds: 10)), 'تست آلارم کلاریو');
+                      DateTime.now().add(Duration(seconds: 10)), 'تست آلارم Clario');
                   toast(context, 'تا ۱۰ ثانیه دیگه آلارم میاد ⏰');
                 }),
               ]),
@@ -340,12 +343,12 @@ class SettingsPage extends StatelessWidget {
             section('اطلاعات و پشتیبانی'),
             Glass(
               child: Column(children: [
-                row('info', Color(0xFF1F9AA6), 'درباره کلاریو',
+                row('info', Color(0xFF1F9AA6), 'درباره Clario',
                     'رایگان، بدون تبلیغ و بدون ثبت‌نام',
                     () => openPage(context, AboutPage())),
                 Divider(height: 1),
                 row('send', Color(0xFF2AA5E0), 'درباره توسعه‌دهنده',
-                    'سازنده کلاریو را بیشتر بشناسید',
+                    'سازنده Clario را بیشتر بشناسید',
                     () => openPage(context, DeveloperPage())),
                 Divider(height: 1),
                 row('trash', kDanger, 'پاک‌کردن همه اطلاعات',
@@ -377,7 +380,7 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-// ───────────────────────── درباره کلاریو ─────────────────────────
+// ───────────────────────── درباره Clario ─────────────────────────
 class AboutPage extends StatelessWidget {
   AboutPage({super.key});
   @override
@@ -385,7 +388,7 @@ class AboutPage extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.fromLTRB(16, 0, 16, 40),
       children: [
-        PageTitle('درباره کلاریو'),
+        PageTitle('درباره Clario'),
         Glass(
           padding: EdgeInsets.fromLTRB(20, 26, 20, 26),
           child: SizedBox(
@@ -393,7 +396,7 @@ class AboutPage extends StatelessWidget {
             child: Column(children: [
               ClarioLogo(size: 88),
               SizedBox(height: 14),
-              Text('Clario | کلاریو',
+              Text('Clario',
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
               SizedBox(height: 4),
               Text('روزت، شفاف‌تر.',
@@ -403,7 +406,7 @@ class AboutPage extends StatelessWidget {
               ClarioMascot(size: 150),
               SizedBox(height: 14),
               Text(
-                  'کلاریو برنامه‌ی رایگان مدیریت کارها، ویجت‌ها و ابزارهای روزانه‌ست؛ بدون تبلیغ و بدون ثبت‌نام. همه اطلاعات فقط روی گوشی خودت ذخیره می‌شه. آب‌وهوا از سرویس رایگان Open-Meteo گرفته می‌شه.',
+                  'Clario برنامه‌ی رایگان مدیریت کارها، ویجت‌ها و ابزارهای روزانه‌ست؛ بدون تبلیغ و بدون ثبت‌نام. همه اطلاعات فقط روی گوشی خودت ذخیره می‌شه. آب‌وهوا از سرویس رایگان Open-Meteo گرفته می‌شه.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: kSub,
@@ -455,7 +458,7 @@ class DeveloperPage extends StatelessWidget {
               Text('ساخته شده توسط زیکو',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
               SizedBox(height: 6),
-              Text('کلاریو رایگان و بدون تبلیغه',
+              Text('Clario رایگان و بدون تبلیغه',
                   style: TextStyle(color: kSub, fontWeight: FontWeight.w700)),
             ]),
           ),
