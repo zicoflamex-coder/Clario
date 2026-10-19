@@ -49,6 +49,8 @@ object AlarmUtil {
         (ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(id)
     }
 
+    fun count(ctx: Context): Int = load(ctx).length()
+
     fun forget(ctx: Context, id: Int) {
         val o = load(ctx)
         o.remove(id.toString())
